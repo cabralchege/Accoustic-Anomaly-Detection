@@ -1,5 +1,11 @@
 pandas
 numpy
+seaborn
 matplotlib
 scikit-learn
 scipy
+tensorflow
+tensorflow-cpu 
+streamlit 
+librosa 
+joblib 
