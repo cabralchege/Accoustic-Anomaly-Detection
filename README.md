@@ -1,64 +1,109 @@
-# Acoustic Anomaly Detection for Railway Infrastructure
-Predicting rolling stock and track failures before they happen using Deep Learning and Audio Signal Processing.
+# Acoustic Anomaly Detection for Industrial Pumps
+This repository contains a Jupyter notebook that implements and compares several machine learning and deep learning models for detecting anomalies in industrial pump sounds using the MIMII (Malfunctioning Industrial Machine Investigation and Inspection) dataset. The goal is to distinguish normal pump operation from abnormal (faulty) sounds.
 
-## Executive Summary
-Railway infrastructure in rugged terrain (like the SGR passing through Tsavo) faces constant stress from heat cycles and load. Traditional visual inspections are manual, slow, and reactive.
+## Overview
+Acoustic anomaly detection plays a crucial role in predictive maintenance. This project explores various unsupervised and supervised approaches to identify anomalies in pump sounds. The workflow includes:
 
-SGR-Guard is an automated predictive maintenance system. It uses Deep Learning (Convolutional Autoencoders) to "listen" to the acoustic signature of wheel-rail interactions. By learning the baseline audio of a "healthy" track, the system can flag unseen anomalies (cracks, wheel flats, or corrugation) by detecting high reconstruction errors in audio spectrograms.
+- Data loading and preprocessing
 
-## The Problem
-Safety Risk: Microscopic rail cracks (Rolling Contact Fatigue) are invisible to the naked eye until catastrophic failure.
+- Feature extraction (MFCCs and Mel‑spectrograms)
 
-Operational Cost: Unscheduled downtime for SGR cargo trains costs millions in logistics delays.
+- Exploratory data analysis (EDA) of features
 
-Data Scarcity: We have thousands of hours of "normal" train sounds, but very few recordings of "crashes/failures," making standard classification models impossible to train.
+- Modeling with:
 
-## The Solution: Unsupervised Anomaly Detection
-Instead of a classifier (Binary: Broken vs. Healthy), this project uses a Reconstruction-based approach:
+  - PCA (baseline reconstruction error)
 
-Input: Raw audio logs converted to Mel-Spectrograms (visual representations of sound frequencies).
+  - Gaussian Mixture Model (GMM)
 
-Model: A Convolutional Autoencoder is trained only on healthy data. It learns to compress and perfectly reconstruct the "sound of a smooth ride."
+  - LSTM Autoencoder
 
-Inference: When the model encounters a "broken" sound (e.g., a clicking rail), it fails to reconstruct the anomaly.
+  - CNN Autoencoder
 
-Trigger: High Reconstruction Error (MSE) flags the segment as critical.
+- Evaluation using ROC curves, AUC, confusion matrices, and threshold optimization
 
-## Architecture Pipeline
+- Error analysis to identify the most challenging acoustic features
 
+## Dataset
+The MIMII Pump Sound Dataset contains recordings of normal and abnormal pump operations.
 
-Deep Learning: PyTorch (Convolutional Autoencoder)
+- Normal samples: 381 files
 
-Audio Processing: Librosa (FFT, Mel-Spectrograms)
+- Abnormal samples: 138 files
 
-Data handling: NumPy, Pandas
+Each audio file is 10 seconds long, sampled at 16 kHz. Features are extracted using:
 
-Visualization: Matplotlib, Seaborn
+- MFCCs (20 coefficients) for sequence models
 
-Deployment (UI): Streamlit (for the dashboard demo)
+- Mel‑spectrograms (64 mel bins) for CNN models
 
-## Dataset Strategy (Proxy Data)
-Since proprietary SGR acoustic data is sensitive, this project utilizes high-fidelity industrial proxy datasets that mimic the physics of rotating machinery and friction:
+## Requirements
+Install the required packages using:
 
-NASA Bearing Dataset (CWRU): Standard benchmark for bearing faults (simulating wheelset issues).
+```bash
+pip install numpy pandas matplotlib seaborn librosa scikit-learn tensorflow kagglehub tqdm joblib
+```
+Main dependencies:
 
-MIMII Dataset: Industrial machine sounds (fans/pumps) for background noise robustness.
+- TensorFlow / Keras (for deep learning models)
 
-## Scalability & Industry Application
-This architecture is hardware-agnostic and scales to other high-value Kenyan sectors:
+- Scikit‑learn (PCA, GMM, evaluation metrics)
 
-Energy (Wind Power):
+- Librosa (audio feature extraction)
 
-Application: Monitoring gearbox health in remote turbines (e.g., Lake Turkana Wind Power).
+- Matplotlib / Seaborn (visualization)
 
-Benefit: Reducing the need for dangerous manual climbs for inspection.
+- Kagglehub (to download the dataset automatically)
 
-Manufacturing:
+## Usage
+The project is provided as a Jupyter notebook that can be run end‑to‑end. You can open it directly in Google Colab using the badge at the top of the notebook.
 
-Application: Conveyor belt motor diagnostics in bottling plants.
+### Running locally
+1. Clone this repository.
 
-Benefit: Predicting motor burnout to prevent production line stoppages.
+2. Install the required packages.
 
-Aviation:
+3. Launch Jupyter Notebook or JupyterLab and open Acoustic_Anomaly_Detection.ipynb.
 
-Application: analyzing jet engine start-up sounds for irregularities.
+4. Execute the cells sequentially – the notebook will automatically download the dataset using `kagglehub`.
+
+## Models & Results
+Four anomaly detection approaches were evaluated. Anomaly scores are derived from:
+
+- *PCA*: reconstruction error after dimensionality reduction (95% variance retained → 261 components).
+
+- *GMM*: negative log‑likelihood of a 4‑component Gaussian mixture fitted to the MFCC mean vectors.
+
+- *LSTM Autoencoder*: sequence‑to‑sequence model trained to reconstruct MFCCs.
+
+- *CNN Autoencoder*: convolutional autoencoder on Mel‑spectrograms.
+
+### ROC Curves
+The notebook generates ROC curves comparing all models. The Area Under the Curve (AUC) scores are:
+
+|Model   | AUC      |
+|--------|----------|
+|PCA     |	0.795   |
+|GMM     |	0.940   |
+|LSTM_AE |	0.880   |
+|CNN_AE  |	0.751   |
+
+## Error Analysis
+To understand which acoustic features are hardest to reconstruct, the per‑MFCC reconstruction error is examined. The notebook highlights the three coefficients with the highest average error, which may be more sensitive to anomalies and could be candidates for further feature engineering.
+
+## Key Findings from Exploratory Data Analysis
+MFCC coefficient distributions differ noticeably between normal and abnormal sounds.
+
+Correlation structures among MFCCs also show distinct patterns, indicating that anomalies alter the spectral relationships.
+
+Spectrogram frequency bins exhibit amplitude and correlation changes that are leveraged by the CNN autoencoder.
+
+## References
+MIMII Dataset: MIMII – Malfunctioning Industrial Machine Investigation and Inspection
+
+Librosa: https://librosa.org/
+
+Scikit‑learn: https://scikit-learn.org/
+
+TensorFlow: https://www.tensorflow.org/
+
